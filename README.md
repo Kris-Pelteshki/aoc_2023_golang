@@ -1,17 +1,8 @@
-[reddit thread after completing the first six years](https://www.reddit.com/r/adventofcode/comments/klzgnx/complete_repo_and_thoughts_in_comments/)
-
-[reddit thread post 2021](https://www.reddit.com/r/adventofcode/comments/rrog0y/all_caught_up_repo_all_gogolang_thoughts_in/)
-
-### Quick Note
-I started this in a pre-generics Go/Golang world. Maybe one day I'll come back and learn generics as they'd be quite useful here. But that's for future Alex.
-
 ## Running Locally
 ### Requirements
 Go 1.16+ is required because [embed][embed] is used for input files.
 
 Use `go run main.go -part <1 or 2>` will be usable to run the actual inputs for that day.
-
-Use `go test -run RegExpToMatchFunctionNames .` to run examples and unit tests via the `main_test.go` files.
 
 ## Scripts (used for all years but 2019)
 Makefile should be fairly self-documenting. Alternatively you can run the binaries yourself via `go run` or `go build`.
