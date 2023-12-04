@@ -6,6 +6,7 @@ prompt.txt
 
 token.txt
 input.txt
+!scripts/skeleton/tmpls/input.txt
 
 
 // ignore files that are prefixed with an underscore
