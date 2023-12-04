@@ -5,6 +5,8 @@ prompt.md
 prompt.txt
 
 token.txt
+input.txt
+
 
 // ignore files that are prefixed with an underscore
 _*
