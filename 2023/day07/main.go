@@ -4,12 +4,171 @@ import (
 	_ "embed"
 	"flag"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/Kris-Pelteshki/aoc_2023/cast"
 	"github.com/Kris-Pelteshki/aoc_2023/util"
 )
+
+type card = string
+type handType = int
+type labelsPriorityMap = map[string]int
+
+type Hand struct {
+	cards    []card
+	bid      int
+	handType handType
+}
+
+var HandTypes = map[string]handType{
+	"High Card":       0,
+	"One Pair":        1,
+	"Two Pairs":       2,
+	"Three of a Kind": 3,
+	"Full house":      4,
+	"Four of a kind":  5,
+	"Five of a kind":  6,
+}
+
+var LabelsPriority = labelsPriorityMap{
+	"2": 0,
+	"3": 1,
+	"4": 2,
+	"5": 3,
+	"6": 4,
+	"7": 5,
+	"8": 6,
+	"9": 7,
+	"T": 8,
+	"J": 9,
+	"Q": 10,
+	"K": 11,
+	"A": 12,
+}
+
+var LabelsPriorityPart2 = labelsPriorityMap{
+	"J": -1,
+	"2": 0,
+	"3": 1,
+	"4": 2,
+	"5": 3,
+	"6": 4,
+	"7": 5,
+	"8": 6,
+	"9": 7,
+	"T": 8,
+	"Q": 10,
+	"K": 11,
+	"A": 12,
+}
+
+func (hand *Hand) setHandType() {
+	labelCounts := make(map[string]int)
+	countsSlice := []int{}
+
+	for _, label := range hand.cards {
+		labelCounts[label]++
+	}
+	for _, count := range labelCounts {
+		countsSlice = append(countsSlice, count)
+	}
+
+	distinctLabels := len(countsSlice)
+	maxGroupLen := slices.Max(countsSlice)
+
+	switch true {
+	case distinctLabels == 5:
+		hand.handType = HandTypes["High Card"]
+	case distinctLabels == 4:
+		hand.handType = HandTypes["One Pair"]
+	case distinctLabels == 3 && slices.Contains(countsSlice, 2):
+		hand.handType = HandTypes["Two Pairs"]
+	case distinctLabels == 3:
+		hand.handType = HandTypes["Three of a Kind"]
+	case distinctLabels == 2 && maxGroupLen == 3:
+		hand.handType = HandTypes["Full house"]
+	case distinctLabels == 2:
+		hand.handType = HandTypes["Four of a kind"]
+	case distinctLabels == 1:
+		hand.handType = HandTypes["Five of a kind"]
+	}
+}
+
+func (hand *Hand) setHandTypeWithWildCard(wildcard string) {
+	labelCounts := make(map[string]int)
+	countsSlice := []int{}
+	maxGroupLen := 0
+	mostCommonLabel := ""
+
+	for _, label := range hand.cards {
+		labelCounts[label]++
+		if labelCounts[label] > maxGroupLen && label != wildcard {
+			maxGroupLen = labelCounts[label]
+			mostCommonLabel = label
+		}
+	}
+
+	wildCount, hasWildCard := labelCounts[wildcard]
+
+	if hasWildCard {
+		maxGroupLen += wildCount
+		labelCounts[mostCommonLabel] += wildCount
+		delete(labelCounts, wildcard)
+	}
+
+	for _, count := range labelCounts {
+		countsSlice = append(countsSlice, count)
+	}
+
+	distinctLabels := len(countsSlice)
+
+	switch true {
+	case distinctLabels == 5:
+		hand.handType = HandTypes["High Card"]
+	case distinctLabels == 4:
+		hand.handType = HandTypes["One Pair"]
+	case distinctLabels == 3 && slices.Contains(countsSlice, 2):
+		hand.handType = HandTypes["Two Pairs"]
+	case distinctLabels == 3:
+		hand.handType = HandTypes["Three of a Kind"]
+	case distinctLabels == 2 && maxGroupLen == 3:
+		hand.handType = HandTypes["Full house"]
+	case distinctLabels == 2:
+		hand.handType = HandTypes["Four of a kind"]
+	case distinctLabels == 1:
+		hand.handType = HandTypes["Five of a kind"]
+	default:
+		hand.handType = HandTypes["High Card"]
+	}
+}
+
+func compareHands(hand1, hand2 *Hand, labelMap *labelsPriorityMap) int {
+	if hand1.handType > hand2.handType {
+		return 1
+	} else if hand1.handType < hand2.handType {
+		return -1
+	} else {
+		// compare cards
+		for i := 0; i < len(hand1.cards); i++ {
+			if (*labelMap)[hand1.cards[i]] > (*labelMap)[hand2.cards[i]] {
+				return 1
+			}
+			if (*labelMap)[hand1.cards[i]] < (*labelMap)[hand2.cards[i]] {
+				return -1
+			}
+		}
+		return 0
+	}
+}
+
+func getTotal(hands *[]Hand) (total int) {
+	for i, hand := range *hands {
+		total += hand.bid * (i + 1)
+	}
+	return total
+}
 
 //go:embed input.txt
 var input string
@@ -43,19 +202,42 @@ func main() {
 }
 
 func part1(input string) int {
-	parsed := parseInput(input)
-	_ = parsed
+	hands := parseInput(input)
 
-	return 0
-}
-
-func part2(input string) int {
-	return 0
-}
-
-func parseInput(input string) (ans []int) {
-	for _, line := range strings.Split(input, "\n") {
-		ans = append(ans, cast.ToInt(line))
+	for i := range hands {
+		hands[i].setHandType()
 	}
-	return ans
+
+	slices.SortStableFunc(hands, func(hand1, hand2 Hand) int {
+		return compareHands(&hand1, &hand2, &LabelsPriority)
+	})
+
+	return getTotal(&hands)
+}
+
+func part2(input string) (total int) {
+	hands := parseInput(input)
+
+	for i := range hands {
+		hands[i].setHandTypeWithWildCard("J")
+	}
+
+	slices.SortStableFunc(hands, func(hand1, hand2 Hand) int {
+		return compareHands(&hand1, &hand2, &LabelsPriorityPart2)
+	})
+
+	return getTotal(&hands)
+}
+
+func parseInput(input string) (hands []Hand) {
+	for _, line := range strings.Split(input, "\n") {
+		fields := strings.Fields(line)
+		hand := Hand{
+			cards: strings.Split(fields[0], ""),
+			bid:   cast.ToInt(fields[1]),
+		}
+
+		hands = append(hands, hand)
+	}
+	return hands
 }
