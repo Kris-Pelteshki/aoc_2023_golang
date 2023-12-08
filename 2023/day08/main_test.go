@@ -4,7 +4,22 @@ import (
 	"testing"
 )
 
-var example = ``
+var example = `LLR
+
+AAA = (BBB, BBB)
+BBB = (AAA, ZZZ)
+ZZZ = (ZZZ, ZZZ)`
+
+var example2 = `LR
+
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)`
 
 func Test_part1(t *testing.T) {
 	tests := []struct {
@@ -15,7 +30,7 @@ func Test_part1(t *testing.T) {
 		{
 			name:  "example",
 			input: example,
-			want:  0,
+			want:  6,
 		},
 		// {
 		// 	name:  "actual",
@@ -39,9 +54,9 @@ func Test_part2(t *testing.T) {
 		want  int
 	}{
 		{
-			name:  "example",
-			input: example,
-			want:  0,
+			name:  "example2",
+			input: example2,
+			want:  6,
 		},
 		// {
 		// 	name:  "actual",

@@ -4,12 +4,69 @@ import (
 	_ "embed"
 	"flag"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
-	"github.com/Kris-Pelteshki/aoc_2023/cast"
 	"github.com/Kris-Pelteshki/aoc_2023/util"
+	"github.com/Kris-Pelteshki/aoc_2023/util/maths"
 )
+
+type Location = string
+type DirectionTuple = [2]Location
+type LocationLookup = map[Location]DirectionTuple
+
+var Directions = map[string]int{
+	"L": 0,
+	"R": 1,
+}
+
+type PathFinder struct {
+	lookup       LocationLookup
+	instructions string
+}
+
+func (pf *PathFinder) getStepCountBetween(startLoc, endLoc Location) (steps int) {
+	getNextDir := newInstructionIterator(pf.instructions)
+	current := startLoc
+
+	for current != endLoc {
+		steps++
+		edges, hasLoc := pf.lookup[current]
+		dir := getNextDir()
+
+		if !hasLoc {
+			log.Fatalf("unknown location: %v", current)
+		}
+
+		current = edges[Directions[dir]]
+	}
+
+	return steps
+}
+
+func (pf *PathFinder) getStepCountBetweenFunc(startLoc Location, foundEnd func(loc *Location) bool) (steps int, endLocation Location) {
+	getNextDir := newInstructionIterator(pf.instructions)
+	current := startLoc
+
+	for {
+		edges, hasLoc := pf.lookup[current]
+		dir := getNextDir()
+
+		if !hasLoc {
+			log.Fatalf("unknown location: %v", current)
+		}
+
+		current = edges[Directions[dir]]
+		steps++
+
+		if foundEnd(&current) {
+			break
+		}
+	}
+
+	return steps, current
+}
 
 //go:embed input.txt
 var input string
@@ -43,19 +100,63 @@ func main() {
 }
 
 func part1(input string) int {
-	parsed := parseInput(input)
-	_ = parsed
-
-	return 0
+	pf := parseInput(input)
+	return pf.getStepCountBetween("AAA", "ZZZ")
 }
 
+// Not a great solution, but it works
+// I tried to implement some cycle detection, but gave up
 func part2(input string) int {
-	return 0
+	pf := parseInput(input)
+	locsEndingInA := []Location{}
+	distances := []int{}
+
+	for loc := range pf.lookup {
+		if endsWithA(&loc) {
+			locsEndingInA = append(locsEndingInA, loc)
+		}
+	}
+
+	for _, locA := range locsEndingInA {
+		distance, _ := pf.getStepCountBetweenFunc(locA, endsWithZ)
+		distances = append(distances, distance)
+	}
+
+	return maths.LCM(distances...)
 }
 
-func parseInput(input string) (ans []int) {
-	for _, line := range strings.Split(input, "\n") {
-		ans = append(ans, cast.ToInt(line))
+func endsWithA(loc *Location) bool {
+	return (*loc)[len((*loc))-1:] == "A"
+}
+
+func endsWithZ(loc *Location) bool {
+	return (*loc)[len((*loc))-1:] == "Z"
+}
+
+func newInstructionIterator(instructions string) func() string {
+	i := 0
+	maxLen := len(instructions)
+
+	return func() string {
+		if i >= maxLen {
+			i = 0
+		}
+		dir := instructions[i : i+1]
+		i++
+		return dir
 	}
-	return ans
+}
+
+func parseInput(input string) PathFinder {
+	lookup := make(LocationLookup)
+	instructions, locationLines, _ := strings.Cut(input, "\n\n")
+
+	for _, line := range strings.Split(locationLines, "\n") {
+		split := strings.Split(line, " = ")
+		dirsStr := strings.Trim(split[1], "()")
+		dirs := strings.Split(dirsStr, ", ")
+		lookup[split[0]] = [2]Location{dirs[0], dirs[1]}
+	}
+
+	return PathFinder{lookup, instructions}
 }
