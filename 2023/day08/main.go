@@ -12,9 +12,8 @@ import (
 	"github.com/Kris-Pelteshki/aoc_2023/util/maths"
 )
 
-type Location = string
-type DirectionTuple = [2]Location
-type LocationLookup = map[Location]DirectionTuple
+type DirectionTuple = [2]string
+type LocationLookup = map[string]DirectionTuple
 
 var Directions = map[string]int{
 	"L": 0,
@@ -26,7 +25,7 @@ type PathFinder struct {
 	instructions string
 }
 
-func (pf *PathFinder) getStepCountBetween(startLoc, endLoc Location) (steps int) {
+func (pf *PathFinder) getStepCountBetween(startLoc, endLoc string) (steps int) {
 	getNextDir := newInstructionIterator(pf.instructions)
 	current := startLoc
 
@@ -45,11 +44,12 @@ func (pf *PathFinder) getStepCountBetween(startLoc, endLoc Location) (steps int)
 	return steps
 }
 
-func (pf *PathFinder) getStepCountBetweenFunc(startLoc Location, foundEnd func(loc *Location) bool) (steps int, endLocation Location) {
+func (pf *PathFinder) getStepCountBetweenFunc(startLoc string, foundEnd func(loc *string) bool) (steps int, endLocation string) {
 	getNextDir := newInstructionIterator(pf.instructions)
 	current := startLoc
 
-	for {
+	for !foundEnd(&current) {
+		steps++
 		edges, hasLoc := pf.lookup[current]
 		dir := getNextDir()
 
@@ -58,11 +58,6 @@ func (pf *PathFinder) getStepCountBetweenFunc(startLoc Location, foundEnd func(l
 		}
 
 		current = edges[Directions[dir]]
-		steps++
-
-		if foundEnd(&current) {
-			break
-		}
 	}
 
 	return steps, current
@@ -104,11 +99,9 @@ func part1(input string) int {
 	return pf.getStepCountBetween("AAA", "ZZZ")
 }
 
-// Not a great solution, but it works
-// I tried to implement some cycle detection, but gave up
 func part2(input string) int {
 	pf := parseInput(input)
-	locsEndingInA := []Location{}
+	locsEndingInA := []string{}
 	distances := []int{}
 
 	for loc := range pf.lookup {
@@ -125,11 +118,11 @@ func part2(input string) int {
 	return maths.LCM(distances...)
 }
 
-func endsWithA(loc *Location) bool {
+func endsWithA(loc *string) bool {
 	return (*loc)[len((*loc))-1:] == "A"
 }
 
-func endsWithZ(loc *Location) bool {
+func endsWithZ(loc *string) bool {
 	return (*loc)[len((*loc))-1:] == "Z"
 }
 
@@ -147,7 +140,7 @@ func newInstructionIterator(instructions string) func() string {
 	}
 }
 
-func parseInput(input string) PathFinder {
+func parseInput(input string) *PathFinder {
 	lookup := make(LocationLookup)
 	instructions, locationLines, _ := strings.Cut(input, "\n\n")
 
@@ -155,8 +148,8 @@ func parseInput(input string) PathFinder {
 		split := strings.Split(line, " = ")
 		dirsStr := strings.Trim(split[1], "()")
 		dirs := strings.Split(dirsStr, ", ")
-		lookup[split[0]] = [2]Location{dirs[0], dirs[1]}
+		lookup[split[0]] = [2]string{dirs[0], dirs[1]}
 	}
 
-	return PathFinder{lookup, instructions}
+	return &PathFinder{lookup, instructions}
 }
