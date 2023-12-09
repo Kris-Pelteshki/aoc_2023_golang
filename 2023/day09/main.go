@@ -42,20 +42,73 @@ func main() {
 	fmt.Println("Time:", time.Since(start))
 }
 
-func part1(input string) int {
-	parsed := parseInput(input)
-	_ = parsed
+func nextSequence(seq []int) ([]int, bool) {
+	nextSequenceLen := len(seq) - 1
+	nextSequence := make([]int, 0, nextSequenceLen)
+	hasNonZero := false
 
-	return 0
+	for i := 0; i < nextSequenceLen; i++ {
+		nextValue := seq[i+1] - seq[i]
+		if !hasNonZero && nextValue != 0 {
+			hasNonZero = true
+		}
+		nextSequence = append(nextSequence, nextValue)
+	}
+	return nextSequence, !hasNonZero
 }
 
-func part2(input string) int {
-	return 0
+func nextNumInSequence(seq []int) (nextNum int) {
+	allZeros := false
+	for !allZeros {
+		nextNum += seq[len(seq)-1]
+		seq, allZeros = nextSequence(seq)
+	}
+	return nextNum
 }
 
-func parseInput(input string) (ans []int) {
+func prevNumInSequence(seq []int) (prevNum int) {
+	allZeros := false
+	firstNumsInSequences := []int{}
+
+	for !allZeros {
+		firstNumsInSequences = append(firstNumsInSequences, seq[0])
+		seq, allZeros = nextSequence(seq)
+	}
+
+	for i := len(firstNumsInSequences) - 1; i >= 0; i-- {
+		prevNum = firstNumsInSequences[i] - prevNum
+	}
+
+	return prevNum
+}
+
+func part1(input string) (total int) {
+	sequences := parseInput(input)
+
+	for _, seq := range sequences {
+		total += nextNumInSequence(seq)
+	}
+
+	return total
+}
+
+func part2(input string) (total int) {
+	sequences := parseInput(input)
+
+	for _, seq := range sequences {
+		total += prevNumInSequence(seq)
+	}
+
+	return total
+}
+
+func parseInput(input string) (ans [][]int) {
 	for _, line := range strings.Split(input, "\n") {
-		ans = append(ans, cast.ToInt(line))
+		var row []int
+		for _, num := range strings.Fields(line) {
+			row = append(row, cast.ToInt(num))
+		}
+		ans = append(ans, row)
 	}
 	return ans
 }
