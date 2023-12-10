@@ -7,9 +7,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Kris-Pelteshki/aoc_2023/cast"
 	"github.com/Kris-Pelteshki/aoc_2023/util"
 )
+
+// TODO
+// refactor this a bit
+
+type Grid [][]string
+
+const StartSymbol = "S"
+
+var dirs = [4][2]int{
+	{0, 1},
+	{1, 0},
+	{0, -1},
+	{-1, 0},
+}
 
 //go:embed input.txt
 var input string
@@ -43,19 +56,119 @@ func main() {
 }
 
 func part1(input string) int {
-	parsed := parseInput(input)
-	_ = parsed
+	grid, startPos := inputToGrid(input)
+	visited := make(map[[2]int]bool)
 
-	return 0
+	queue := make([][2]int, 0)
+	queue = append(queue, startPos)
+	visited[startPos] = true
+	distance := make(map[[2]int]int)
+	distance[startPos] = 0
+	maxDistance := 0
+
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+
+		for _, neighbor := range getConnectedNeighbors(&grid, current[0], current[1]) {
+			if !visited[neighbor] {
+				queue = append(queue, neighbor)
+				visited[neighbor] = true
+				distance[neighbor] = distance[current] + 1
+				if distance[neighbor] > maxDistance {
+					maxDistance = distance[neighbor]
+				}
+			}
+		}
+	}
+
+	return maxDistance
 }
 
 func part2(input string) int {
 	return 0
 }
 
-func parseInput(input string) (ans []int) {
-	for _, line := range strings.Split(input, "\n") {
-		ans = append(ans, cast.ToInt(line))
+func getNeighbors(grid *Grid, x int, y int) (neighbors [][2]int) {
+	gridLen := len(*grid)
+
+	for _, dir := range dirs {
+		col := x + dir[0]
+		row := y + dir[1]
+
+		if col < 0 || col >= gridLen || row < 0 || row >= gridLen || (*grid)[row][col] == "." {
+			continue
+		}
+
+		neighbors = append(neighbors, [2]int{col, row})
 	}
-	return ans
+	return neighbors
+}
+
+func getConnectedNeighbors(grid *Grid, x int, y int) (connectedNeighbors [][2]int) {
+	for _, coords := range getNeighbors(grid, x, y) {
+		adjacentPipes := getAdjacentPipes(grid, coords[0], coords[1])
+
+		for _, pipe := range adjacentPipes {
+			if pipe[0] == x && pipe[1] == y {
+				connectedNeighbors = append(connectedNeighbors, coords)
+			}
+		}
+	}
+	return connectedNeighbors
+}
+
+func getAdjacentPipes(grid *Grid, x int, y int) (res [2][2]int) {
+	symbol := (*grid)[y][x]
+
+	switch symbol {
+	case "|":
+		res = [2][2]int{
+			{x, y - 1},
+			{x, y + 1},
+		}
+	case "-":
+		res = [2][2]int{
+			{x - 1, y},
+			{x + 1, y},
+		}
+	case "L":
+		res = [2][2]int{
+			{x + 1, y},
+			{x, y - 1},
+		}
+	case "J":
+		res = [2][2]int{
+			{x - 1, y},
+			{x, y - 1},
+		}
+	case "7":
+		res = [2][2]int{
+			{x - 1, y},
+			{x, y + 1},
+		}
+	case "F":
+		res = [2][2]int{
+			{x + 1, y},
+			{x, y + 1},
+		}
+	}
+
+	return res
+}
+
+func inputToGrid(input string) (grid Grid, startPos [2]int) {
+	for _, line := range strings.Split(input, "\n") {
+		grid = append(grid, strings.Split(line, ""))
+	}
+
+	for i := range grid {
+		for j := range grid {
+			if grid[i][j] == StartSymbol {
+				startPos = [2]int{j, i}
+				break
+			}
+		}
+	}
+	return grid, startPos
 }
