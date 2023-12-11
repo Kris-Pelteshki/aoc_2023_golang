@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Kris-Pelteshki/aoc_2023/util"
+	"github.com/emirpasic/gods/queues/arrayqueue"
 )
 
 // TODO
@@ -59,22 +60,22 @@ func part1(input string) int {
 	grid, startPos := inputToGrid(input)
 	visited := make(map[[2]int]bool)
 
-	queue := make([][2]int, 0)
-	queue = append(queue, startPos)
+	queue := arrayqueue.New()
+	queue.Enqueue(startPos)
 	visited[startPos] = true
 	distance := make(map[[2]int]int)
 	distance[startPos] = 0
 	maxDistance := 0
 
-	for len(queue) > 0 {
-		current := queue[0]
-		queue = queue[1:]
+	for queue.Size() > 0 {
+		current, _ := queue.Dequeue()
+		currentCoords := current.([2]int)
 
-		for _, neighbor := range getConnectedNeighbors(&grid, current[0], current[1]) {
+		for _, neighbor := range getConnectedNeighbors(&grid, currentCoords[0], currentCoords[1]) {
 			if !visited[neighbor] {
-				queue = append(queue, neighbor)
+				queue.Enqueue(neighbor)
 				visited[neighbor] = true
-				distance[neighbor] = distance[current] + 1
+				distance[neighbor] = distance[currentCoords] + 1
 				if distance[neighbor] > maxDistance {
 					maxDistance = distance[neighbor]
 				}
