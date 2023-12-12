@@ -50,7 +50,7 @@ func Test_part2(t *testing.T) {
 		{
 			name:  "example",
 			input: example,
-			want:  0,
+			want:  1030, // assuming expandBy is 10
 		},
 		// {
 		// 	name:  "actual",

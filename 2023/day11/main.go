@@ -64,7 +64,15 @@ func main() {
 }
 
 func part1(input string) (total int) {
-	universe := getUniverse(input)
+	return calcTotalDistancesOfPairs(input, 2)
+}
+
+func part2(input string) int {
+	return calcTotalDistancesOfPairs(input, 1000000)
+}
+
+func calcTotalDistancesOfPairs(input string, expandEmptySpaceByFactorOf int) (total int) {
+	universe := getUniverse(input, expandEmptySpaceByFactorOf)
 	galaxyPairs := make(GalaxyPairs)
 	visited := make(map[Id]bool)
 
@@ -90,49 +98,48 @@ func part1(input string) (total int) {
 	return total
 }
 
-func part2(input string) int {
-	return 0
-}
-
-func buildGrid(input string) *[]string {
+func buildGrid(input string, expandEmptySpaceByFactorOf int) (*[]string, []int, []int) {
 	grid := util.SplitLines(input)
 
-	insertCount := 0
+	rowIndexToCoords := make([]int, len(grid))
+	colIndexToCoords := make([]int, len(grid[0]))
+	emptyRowCount := 0
+	emptyColCount := 0
+
 	for y, line := range grid {
+		rowIndexToCoords[y] = emptyRowCount*(expandEmptySpaceByFactorOf-1) + y
 		if !strings.Contains(line, "#") {
-			grid = slices.Insert(grid, y+insertCount, line)
-			insertCount++
+			emptyRowCount++
 		}
 	}
 
-	insertCount = 0
 	for x := range grid[0] {
 		col := ""
 		for y := range grid {
-			col += string(grid[y][x+insertCount])
+			col += string(grid[y][x])
 		}
+
+		colIndexToCoords[x] = emptyColCount*(expandEmptySpaceByFactorOf-1) + x
+
 		if !strings.Contains(col, "#") {
-			for y := range grid {
-				grid[y] = grid[y][:x+insertCount] + "." + grid[y][x+insertCount:]
-			}
-			insertCount++
+			emptyColCount++
 		}
 	}
 
-	clipped := slices.Clip(grid)
-	return &clipped
+	grid = slices.Clip(grid)
+	return &grid, rowIndexToCoords, colIndexToCoords
 }
 
 // parses the input into galaxies
-func getUniverse(input string) Universe {
+func getUniverse(input string, expandEmptySpaceByFactorOf int) Universe {
 	galaxies := make(Universe)
-	grid := buildGrid(input)
+	grid, rowIndexToCoords, colIndexToCoords := buildGrid(input, expandEmptySpaceByFactorOf)
 	id := 0
 
 	for y, line := range *grid {
 		for x, char := range line {
 			if char == '#' {
-				galaxies[id] = &Galaxy{Point{x, y}, id}
+				galaxies[id] = &Galaxy{Point{colIndexToCoords[x], rowIndexToCoords[y]}, id}
 				id++
 			}
 		}
