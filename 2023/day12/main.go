@@ -11,6 +11,11 @@ import (
 	"github.com/Kris-Pelteshki/aoc_2023/util"
 )
 
+type SpringRow struct {
+	row    string
+	groups []int
+}
+
 //go:embed input.txt
 var input string
 
@@ -42,20 +47,22 @@ func main() {
 	fmt.Println("Time:", time.Since(start))
 }
 
-func part1(input string) int {
-	parsed := parseInput(input)
-	_ = parsed
+func part1(input string) (total int) {
+	rows := parseInput(input)
 
-	return 0
+	return total
 }
 
 func part2(input string) int {
 	return 0
 }
 
-func parseInput(input string) (ans []int) {
-	for _, line := range strings.Split(input, "\n") {
-		ans = append(ans, cast.ToInt(line))
+func parseInput(input string) (rows []SpringRow) {
+	for _, line := range util.SplitLines(input) {
+		parts := strings.Split(line, " ")
+		row := parts[0]
+		groups := cast.ToInts(strings.Split(parts[1], ","))
+		rows = append(rows, SpringRow{row, groups})
 	}
-	return ans
+	return rows
 }

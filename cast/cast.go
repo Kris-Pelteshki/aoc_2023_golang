@@ -10,37 +10,42 @@ import (
 
 // ToInt will case a given arg into an int type.
 // Supported types are:
-//    - string
+//   - string
 func ToInt(arg interface{}) int {
-	var val int
-	switch arg.(type) {
+	switch v := arg.(type) {
 	case string:
+		var val int
 		var err error
-		val, err = strconv.Atoi(arg.(string))
+		val, err = strconv.Atoi(v)
 		if err != nil {
 			panic("error converting string to int " + err.Error())
 		}
+		return val
 	default:
 		panic(fmt.Sprintf("unhandled type for int casting %T", arg))
 	}
-	return val
+}
+
+func ToInts(args []string) (vals []int) {
+	for _, arg := range args {
+		vals = append(vals, ToInt(arg))
+	}
+	return vals
 }
 
 // ToString will case a given arg into an int type.
 // Supported types are:
-//    - int
-//    - byte
-//    - rune
-func ToString(arg interface{}) string {
-	var str string
-	switch arg.(type) {
+//   - int
+//   - byte
+//   - rune
+func ToString(arg interface{}) (str string) {
+	switch v := arg.(type) {
 	case int:
-		str = strconv.Itoa(arg.(int))
+		str = strconv.Itoa(v)
 	case byte:
-		b := arg.(byte)
-		str = string(rune(b))
+		str = string(rune(v))
 	case rune:
-		str = string(arg.(rune))
+		str = string(v)
 	default:
 		panic(fmt.Sprintf("unhandled type for string casting %T", arg))
 	}

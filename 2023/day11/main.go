@@ -76,7 +76,7 @@ func calcTotalDistancesOfPairs(input string, expandEmptySpaceByFactorOf int) (to
 	galaxyPairs := make(GalaxyPairs)
 	visited := make(map[Id]bool)
 
-	// adjavency list
+	// adjacency list
 	for _, galaxy := range universe {
 		galaxyPairs[galaxy.ID] = make([]*Galaxy, 0)
 		visited[galaxy.ID] = true
