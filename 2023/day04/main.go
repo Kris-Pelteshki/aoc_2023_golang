@@ -13,13 +13,13 @@ import (
 	"github.com/Kris-Pelteshki/aoc_2023/util"
 )
 
-type card struct {
+type Card struct {
 	id               int
 	potentialWinners []int
 	nums             []int
 }
 
-func (c card) getWinningNumbers() (winners []int) {
+func (c *Card) getWinningNumbers() (winners []int) {
 	for _, num := range c.nums {
 		if slices.Contains(c.potentialWinners, num) {
 			winners = append(winners, num)
@@ -107,21 +107,17 @@ func part2(input string) (total int) {
 	return total
 }
 
-func parseInput(input string) (cards []card) {
+func parseInput(input string) (cards []*Card) {
 	for _, line := range strings.Split(input, "\n") {
-		c := card{}
+		c := Card{}
 		first, second, _ := strings.Cut(line, ":")
 		fmt.Sscanf(first, "Card %d", &c.id)
 
 		winStr, numStr, _ := strings.Cut(second, "|")
-		for _, n := range strings.Fields(winStr) {
-			c.potentialWinners = append(c.potentialWinners, cast.ToInt(n))
-		}
-		for _, n := range strings.Fields(numStr) {
-			c.nums = append(c.nums, cast.ToInt(n))
-		}
+		c.potentialWinners = cast.ToInts(strings.Fields(winStr))
+		c.nums = cast.ToInts(strings.Fields(numStr))
 
-		cards = append(cards, c)
+		cards = append(cards, &c)
 	}
 	return cards
 }

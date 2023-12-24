@@ -13,7 +13,7 @@ import (
 	"github.com/Kris-Pelteshki/aoc_2023/util"
 )
 
-type point[T any] struct {
+type Point[T any] struct {
 	value T
 	x     int
 	y     int
@@ -28,19 +28,17 @@ func keyToCoords(key string) (x, y int) {
 	return x, y
 }
 
-func (p *point[T]) String() string {
+func (p *Point[T]) String() string {
 	return coordsToKey(p.x, p.y)
 }
 
-type numberPoint = point[int]
 type coordId = string
 type numberId = coordId
-
 type numbersCoordMap = map[numberId][]coordId
-type symbolMap = map[string]point[string]
-type numbersMap = map[string]numberPoint
+type symbolMap = map[string]Point[string]
+type numbersMap = map[string]Point[int]
 
-type grid struct {
+type Grid struct {
 	rows []string
 }
 
@@ -76,14 +74,12 @@ func main() {
 		util.CopyToClipboard(fmt.Sprintf("%v", ans))
 		fmt.Println("Output:", ans)
 	}
-	endTime := time.Now()
-	duration := endTime.Sub(startTime)
-	fmt.Printf("Time taken: %v\n", duration)
+	fmt.Printf("Time taken: %v\n", time.Since(startTime))
 }
 
 func part1(input string) (total int) {
 	grid := buildGrid(input)
-	symbolMap, numbersMap, coordsMap := buildMaps(&grid)
+	symbolMap, numbersMap, coordsMap := buildMaps(grid)
 	nums := []int{}
 
 	for _, numPoint := range numbersMap {
@@ -100,7 +96,7 @@ func part1(input string) (total int) {
 
 func part2(input string) (total int) {
 	grid := buildGrid(input)
-	symbolMap, numbersMap, coordsMap := buildMaps(&grid)
+	symbolMap, numbersMap, coordsMap := buildMaps(grid)
 	nums := []int{}
 
 	for _, point := range symbolMap {
@@ -122,12 +118,13 @@ func part2(input string) (total int) {
 	return total
 }
 
-func buildGrid(input string) (grid grid) {
-	grid.rows = append(grid.rows, strings.Split(input, "\n")...)
-	return grid
+func buildGrid(input string) (grid *Grid) {
+	return &Grid{
+		rows: strings.Split(input, "\n"),
+	}
 }
 
-func buildMaps(grid *grid) (symbols symbolMap, numbers numbersMap, coordsMap numbersCoordMap) {
+func buildMaps(grid *Grid) (symbols symbolMap, numbers numbersMap, coordsMap numbersCoordMap) {
 	symbols = make(symbolMap)
 	numbers = make(numbersMap)
 	coordsMap = make(numbersCoordMap)
@@ -148,7 +145,7 @@ func buildMaps(grid *grid) (symbols symbolMap, numbers numbersMap, coordsMap num
 					temp += string(char)
 				}
 
-				point := point[int]{
+				point := Point[int]{
 					cast.ToInt(temp),
 					x,
 					y,
@@ -162,7 +159,7 @@ func buildMaps(grid *grid) (symbols symbolMap, numbers numbersMap, coordsMap num
 			}
 
 			if isSymbol(char) {
-				point := point[string]{
+				point := Point[string]{
 					string(char),
 					x,
 					y,
@@ -177,7 +174,7 @@ func buildMaps(grid *grid) (symbols symbolMap, numbers numbersMap, coordsMap num
 	return symbols, numbers, coordsMap
 }
 
-func hasAdjacentSymbol[Tpoint any](symbolMap *symbolMap, coordsMap *numbersCoordMap, p *point[Tpoint]) bool {
+func hasAdjacentSymbol[Tpoint any](symbolMap *symbolMap, coordsMap *numbersCoordMap, p *Point[Tpoint]) bool {
 	found := false
 
 	coords, coordsOk := (*coordsMap)[p.String()]
@@ -208,7 +205,7 @@ func hasAdjacentSymbol[Tpoint any](symbolMap *symbolMap, coordsMap *numbersCoord
 	return found
 }
 
-func getTwoAdjacentNumbers[Tpoint any](numbersMap *numbersMap, coordsMap *numbersCoordMap, p *point[Tpoint]) (int, int, bool) {
+func getTwoAdjacentNumbers[Tpoint any](numbersMap *numbersMap, coordsMap *numbersCoordMap, p *Point[Tpoint]) (int, int, bool) {
 	adjacentNums := []int{}
 	seenNumIds := []string{}
 

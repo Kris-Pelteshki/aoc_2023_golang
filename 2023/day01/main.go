@@ -2,11 +2,14 @@ package main
 
 import (
 	_ "embed"
+	"flag"
 	"fmt"
 	"strconv"
 	"strings"
 	"unicode"
-	// "github.com/Kris-Pelteshki/aoc_2023/cast"
+
+	"github.com/Kris-Pelteshki/aoc_2023/cast"
+	"github.com/Kris-Pelteshki/aoc_2023/util"
 )
 
 //go:embed input.txt
@@ -20,89 +23,32 @@ func init() {
 	}
 }
 
-// func main() {
-// 	var part int
-// 	flag.IntVar(&part, "part", 1, "part 1 or 2")
-// 	flag.Parse()
-// 	fmt.Println("Running part", part)
-
-// 	if part == 10 {
-// 		ans := part1(input)
-// 		util.CopyToClipboard(fmt.Sprintf("%v", ans))
-// 		fmt.Println("Output:", ans)
-// 	} else {
-// 		ans := part2(input)
-// 		util.CopyToClipboard(fmt.Sprintf("%v", ans))
-// 		fmt.Println("Output:", ans)
-// 	}
-// }
-
-// func part1(input string) int {
-// 	parsed := parseInput(input)
-// 	return util.Sum(parsed)
-// }
-
-// func part2(input string) int {
-// 	parsed := parseInput(input)
-// 	return util.Sum(parsed)
-// }
-
-// var searchTerms = map[string]string{
-// 	"one":   "1",
-// 	"two":   "2",
-// 	"three": "3",
-// 	"four":  "4",
-// 	"five":  "5",
-// 	"six":   "6",
-// 	"seven": "7",
-// 	"eight": "8",
-// 	"nine":  "9",
-// }
-
-// func parseInput(input string) (ans []int) {
-// 	for _, line := range strings.Split(input, "\n") {
-// 		for k, v := range searchTerms {
-// 			line = strings.ReplaceAll(line, k, v)
-// 		}
-
-// 		digits := strings.Map(func(r rune) rune {
-// 			if r >= '0' && r <= '9' {
-// 				return r
-// 			}
-// 			return -1
-// 		}, line)
-
-// 		first := digits[:1]
-// 		last := digits[len(digits)-1:]
-
-// 		num := cast.ToInt(first + last)
-// 		ans = append(ans, num)
-// 	}
-// 	return ans
-// }
-
 func main() {
-	// lines := strings.Split(input, "\n")
+	var part int
+	flag.IntVar(&part, "part", 1, "part 1 or 2")
+	flag.Parse()
+	fmt.Println("Running part", part)
 
-	fmt.Println("part1:", part1(input))
-	fmt.Println("part2:", part2(input))
+	if part == 1 {
+		ans := part1(input)
+		util.CopyToClipboard(fmt.Sprintf("%v", ans))
+		fmt.Println("Output:", ans)
+	} else {
+		ans := part2(input)
+		util.CopyToClipboard(fmt.Sprintf("%v", ans))
+		fmt.Println("Output:", ans)
+	}
 }
 
-func part1(i string) int {
-	lines := strings.Split(i, "\n")
-
-	var total int = 0
-	for _, line := range lines {
+func part1(i string) (total int) {
+	for _, line := range util.SplitLines(i) {
 		first, last := findDigits(line)
-		ni, _ := strconv.Atoi(first + last)
-		total += ni
+		total += cast.ToInt(first + last)
 	}
 	return total
 }
 
-func part2(i string) int {
-	lines := strings.Split(i, "\n")
-
+func part2(i string) (total int) {
 	digits := map[string]int{
 		"one":   1,
 		"two":   2,
@@ -115,15 +61,12 @@ func part2(i string) int {
 		"nine":  9,
 	}
 
-	total := 0
-	for _, line := range lines {
+	for _, line := range util.SplitLines(i) {
 		first, _ := findDigits(frontReplace(line, &digits))
 		_, last := findDigits(backReplace(line, &digits))
-		num, _ := strconv.Atoi(first + last)
-		total += num
+		total += cast.ToInt(first + last)
 	}
 	return total
-
 }
 
 func frontReplace(line string, digits *map[string]int) string {
@@ -155,8 +98,7 @@ func backReplace(line string, digits *map[string]int) string {
 	return line
 }
 
-func findDigits(line string) (string, string) {
-	var first, last string
+func findDigits(line string) (first, last string) {
 	for _, char := range line {
 		if unicode.IsDigit(char) {
 			last = string(char)

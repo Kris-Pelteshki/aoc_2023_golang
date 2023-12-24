@@ -21,7 +21,7 @@ type mapRangeType struct {
 	destinationStart uint
 }
 
-type conversionMap struct {
+type ConversionMap struct {
 	from   string
 	to     string
 	ranges []mapRangeType
@@ -64,7 +64,7 @@ func main() {
 	fmt.Println("Time:", time.Since(start))
 }
 
-func mapValue(value uint, conversionMap conversionMap) uint {
+func mapValue(value uint, conversionMap *ConversionMap) uint {
 	for _, mapRange := range conversionMap.ranges {
 		if value >= mapRange.sourceStart && value < mapRange.sourceEnd {
 			return mapRange.destinationStart + (value - mapRange.sourceStart)
@@ -118,8 +118,8 @@ func part2(input string) uint {
 	return minLocation
 }
 
-func buildMapRange(input string) conversionMap {
-	ans := conversionMap{}
+func buildMapRange(input string) *ConversionMap {
+	ans := ConversionMap{}
 
 	name, data, _ := strings.Cut(input, " map:\n")
 
@@ -145,10 +145,10 @@ func buildMapRange(input string) conversionMap {
 		return ans.ranges[i].destinationStart < ans.ranges[j].destinationStart
 	})
 
-	return ans
+	return &ans
 }
 
-func parseInput(input string) (seeds []uint, conversionMaps []conversionMap) {
+func parseInput(input string) (seeds []uint, conversionMaps []*ConversionMap) {
 	seperator := "\n\n"
 
 	seedLine, dataLine, _ := strings.Cut(input, seperator)

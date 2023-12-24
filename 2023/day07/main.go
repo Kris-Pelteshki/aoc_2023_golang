@@ -163,8 +163,12 @@ func compareHands(hand1, hand2 *Hand, labelMap *labelsPriorityMap) int {
 	}
 }
 
-func getTotal(hands *[]Hand) (total int) {
-	for i, hand := range *hands {
+func getTotal(hands []*Hand, priorityMap *labelsPriorityMap) (total int) {
+	slices.SortStableFunc(hands, func(hand1, hand2 *Hand) int {
+		return compareHands(hand1, hand2, priorityMap)
+	})
+
+	for i, hand := range hands {
 		total += hand.bid * (i + 1)
 	}
 	return total
@@ -208,11 +212,7 @@ func part1(input string) int {
 		hands[i].setHandType()
 	}
 
-	slices.SortStableFunc(hands, func(hand1, hand2 Hand) int {
-		return compareHands(&hand1, &hand2, &LabelsPriority)
-	})
-
-	return getTotal(&hands)
+	return getTotal(hands, &LabelsPriority)
 }
 
 func part2(input string) (total int) {
@@ -222,14 +222,10 @@ func part2(input string) (total int) {
 		hands[i].setHandTypeWithWildCard("J")
 	}
 
-	slices.SortStableFunc(hands, func(hand1, hand2 Hand) int {
-		return compareHands(&hand1, &hand2, &LabelsPriorityPart2)
-	})
-
-	return getTotal(&hands)
+	return getTotal(hands, &LabelsPriorityPart2)
 }
 
-func parseInput(input string) (hands []Hand) {
+func parseInput(input string) (hands []*Hand) {
 	for _, line := range strings.Split(input, "\n") {
 		fields := strings.Fields(line)
 		hand := Hand{
@@ -237,7 +233,7 @@ func parseInput(input string) (hands []Hand) {
 			bid:   cast.ToInt(fields[1]),
 		}
 
-		hands = append(hands, hand)
+		hands = append(hands, &hand)
 	}
 	return hands
 }

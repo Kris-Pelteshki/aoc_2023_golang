@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Kris-Pelteshki/aoc_2023/cast"
 	"github.com/Kris-Pelteshki/aoc_2023/util"
@@ -43,7 +44,7 @@ func (g *Game) getMaxOfEachColor() (max GameValues) {
 	return max
 }
 
-func isPossible(g *Game) bool {
+func (g *Game) isPossible() bool {
 	for _, result := range g.results {
 		if result.red > Limits.red || result.green > Limits.green || result.blue > Limits.blue {
 			return false
@@ -68,6 +69,7 @@ func main() {
 	flag.IntVar(&part, "part", 1, "part 1 or 2")
 	flag.Parse()
 	fmt.Println("Running part", part)
+	startTime := time.Now()
 
 	if part == 1 {
 		ans := part1(input)
@@ -78,13 +80,14 @@ func main() {
 		util.CopyToClipboard(fmt.Sprintf("%v", ans))
 		fmt.Println("Output:", ans)
 	}
+	fmt.Println("Time", time.Since(startTime))
 }
 
 func part1(input string) (total int) {
 	games := parseInput(input)
 
 	for _, game := range games {
-		if isPossible(&game) {
+		if game.isPossible() {
 			total += game.id
 		}
 	}
@@ -103,12 +106,9 @@ func part2(input string) (total int) {
 	return total
 }
 
-func parseInput(input string) (games []Game) {
+func parseInput(input string) (games []*Game) {
 	for _, line := range strings.Split(input, "\n") {
-		game := Game{
-			id:      0,
-			results: []GameValues{},
-		}
+		game := new(Game)
 
 		gameStr, dataStr, found := strings.Cut(line, ":")
 		if !found {
