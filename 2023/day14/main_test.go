@@ -4,7 +4,16 @@ import (
 	"testing"
 )
 
-var example = ``
+var example = `O....#....
+O.OO#....#
+.....##...
+OO.#O....O
+.O.....O#.
+O.#..O.#.#
+..O..#O..O
+.......O..
+#....###..
+#OO..#....`
 
 func Test_part1(t *testing.T) {
 	tests := []struct {
@@ -15,7 +24,7 @@ func Test_part1(t *testing.T) {
 		{
 			name:  "example",
 			input: example,
-			want:  0,
+			want:  136,
 		},
 		// {
 		// 	name:  "actual",
@@ -41,7 +50,7 @@ func Test_part2(t *testing.T) {
 		{
 			name:  "example",
 			input: example,
-			want:  0,
+			want:  64,
 		},
 		// {
 		// 	name:  "actual",
