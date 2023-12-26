@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"flag"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -42,20 +43,90 @@ func main() {
 	fmt.Println("Time:", time.Since(start))
 }
 
-func part1(input string) int {
-	parsed := parseInput(input)
-	_ = parsed
+func part1(input string) (total int) {
+	parsed := strings.Split(input, ",")
 
-	return 0
-}
-
-func part2(input string) int {
-	return 0
-}
-
-func parseInput(input string) (ans []int) {
-	for _, line := range strings.Split(input, "\n") {
-		ans = append(ans, cast.ToInt(line))
+	for _, s := range parsed {
+		total += hash(s)
 	}
-	return ans
+	return total
+}
+
+func part2(input string) (total int) {
+	Boxes := make([]Box, 256)
+	operations := parseOperations(input)
+
+	for _, op := range operations {
+		boxNum := hash(op.Label)
+		box := &Boxes[boxNum]
+		if op.Operation == "-" {
+			box.removeLens(op.Label)
+		} else {
+			box.addOrReplaceLens(Lens{op.Label, op.FocalLength})
+		}
+	}
+
+	for i, box := range Boxes {
+		for j, lens := range box.Lenses {
+			total += (i + 1) * (j + 1) * lens.FocalLength
+		}
+	}
+
+	return total
+}
+
+type Lens struct {
+	Label       string
+	FocalLength int
+}
+
+type Box struct {
+	Lenses []Lens
+}
+
+type Operation struct {
+	Label       string
+	Operation   string
+	FocalLength int
+}
+
+func (box *Box) removeLens(label string) {
+	box.Lenses = slices.DeleteFunc(box.Lenses, func(lens Lens) bool {
+		return lens.Label == label
+	})
+}
+
+func (box *Box) addOrReplaceLens(lens Lens) {
+	for i, existingLens := range box.Lenses {
+		if existingLens.Label == lens.Label {
+			box.Lenses[i] = lens
+			return
+		}
+	}
+	box.Lenses = append(box.Lenses, lens)
+}
+
+func hash(s string) int {
+	currentValue := 0
+	for _, c := range s {
+		currentValue = ((currentValue + int(c)) * 17) % 256
+	}
+	return currentValue
+}
+
+func parseOperations(input string) (operations []Operation) {
+	for _, s := range strings.Split(input, ",") {
+		operation := Operation{}
+
+		if strings.HasSuffix(s, "-") {
+			operation.Operation = "-"
+			operation.Label = s[:len(s)-1]
+		} else {
+			operation.Operation = "="
+			operation.Label = s[:len(s)-2]
+			operation.FocalLength = cast.ToInt(s[len(s)-1:])
+		}
+		operations = append(operations, operation)
+	}
+	return operations
 }
