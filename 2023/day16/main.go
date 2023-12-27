@@ -42,14 +42,36 @@ func main() {
 	fmt.Println("Time:", time.Since(start))
 }
 
-func part1(input string) (total int) {
+func part1(input string) int {
 	grid := parseInput(input)
-	total = grid.simulateBeam()
+	total := grid.simulateBeam(Beam{0, 0, Right})
 	return total
 }
 
 func part2(input string) int {
-	return 0
+	grid := parseInput(input)
+	maxEnergy := 0
+	entryPoints := []Beam{}
+
+	// vertical beams
+	for x := 0; x < grid.Width; x++ {
+		entryPoints = append(entryPoints, Beam{x, 0, Down})
+		entryPoints = append(entryPoints, Beam{x, grid.Height - 1, Up})
+	}
+	// horizontal beams
+	for y := 0; y < grid.Height; y++ {
+		entryPoints = append(entryPoints, Beam{0, y, Right})
+		entryPoints = append(entryPoints, Beam{grid.Width - 1, y, Left})
+	}
+
+	for _, beam := range entryPoints {
+		energy := grid.simulateBeam(beam)
+		if energy > maxEnergy {
+			maxEnergy = energy
+		}
+	}
+
+	return maxEnergy
 }
 
 const (
@@ -100,8 +122,8 @@ func (g *Grid) isInside(x, y int) bool {
 	return x >= 0 && x < g.Width && y >= 0 && y < g.Height
 }
 
-func (g *Grid) simulateBeam() int {
-	beam := &Beam{0, 0, Right}
+func (g *Grid) simulateBeam(b Beam) int {
+	beam := &b
 	energizedTiles := make(map[[2]int]bool)
 	visitedSplitters := make(map[[2]int]bool)
 
