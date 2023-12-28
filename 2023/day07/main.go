@@ -12,9 +12,9 @@ import (
 	"github.com/Kris-Pelteshki/aoc_2023/util"
 )
 
-type card = string
+type card = rune
 type handType = int
-type labelsPriorityMap = map[string]int
+type labelsPriorityMap = map[card]int
 
 type Hand struct {
 	cards    []card
@@ -33,39 +33,39 @@ var HandTypes = map[string]handType{
 }
 
 var LabelsPriority = labelsPriorityMap{
-	"2": 0,
-	"3": 1,
-	"4": 2,
-	"5": 3,
-	"6": 4,
-	"7": 5,
-	"8": 6,
-	"9": 7,
-	"T": 8,
-	"J": 9,
-	"Q": 10,
-	"K": 11,
-	"A": 12,
+	'2': 0,
+	'3': 1,
+	'4': 2,
+	'5': 3,
+	'6': 4,
+	'7': 5,
+	'8': 6,
+	'9': 7,
+	'T': 8,
+	'J': 9,
+	'Q': 10,
+	'K': 11,
+	'A': 12,
 }
 
 var LabelsPriorityPart2 = labelsPriorityMap{
-	"J": -1,
-	"2": 0,
-	"3": 1,
-	"4": 2,
-	"5": 3,
-	"6": 4,
-	"7": 5,
-	"8": 6,
-	"9": 7,
-	"T": 8,
-	"Q": 10,
-	"K": 11,
-	"A": 12,
+	'J': -1,
+	'2': 0,
+	'3': 1,
+	'4': 2,
+	'5': 3,
+	'6': 4,
+	'7': 5,
+	'8': 6,
+	'9': 7,
+	'T': 8,
+	'Q': 10,
+	'K': 11,
+	'A': 12,
 }
 
 func (hand *Hand) setHandType() {
-	labelCounts := make(map[string]int)
+	labelCounts := make(map[card]int)
 	countsSlice := []int{}
 
 	for _, label := range hand.cards {
@@ -96,11 +96,11 @@ func (hand *Hand) setHandType() {
 	}
 }
 
-func (hand *Hand) setHandTypeWithWildCard(wildcard string) {
-	labelCounts := make(map[string]int)
+func (hand *Hand) setHandTypeWithWildCard(wildcard rune) {
+	labelCounts := make(map[card]int)
 	countsSlice := []int{}
 	maxGroupLen := 0
-	mostCommonLabel := ""
+	var mostCommonLabel rune
 
 	for _, label := range hand.cards {
 		labelCounts[label]++
@@ -219,21 +219,19 @@ func part2(input string) (total int) {
 	hands := parseInput(input)
 
 	for i := range hands {
-		hands[i].setHandTypeWithWildCard("J")
+		hands[i].setHandTypeWithWildCard('J')
 	}
 
 	return getTotal(hands, &LabelsPriorityPart2)
 }
 
 func parseInput(input string) (hands []*Hand) {
-	for _, line := range strings.Split(input, "\n") {
+	for _, line := range util.SplitLines(input) {
 		fields := strings.Fields(line)
-		hand := Hand{
-			cards: strings.Split(fields[0], ""),
+		hands = append(hands, &Hand{
+			cards: []rune(fields[0]),
 			bid:   cast.ToInt(fields[1]),
-		}
-
-		hands = append(hands, &hand)
+		})
 	}
 	return hands
 }
