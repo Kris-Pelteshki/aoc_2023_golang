@@ -54,18 +54,28 @@ func part2(input string) int {
 	entryPoints := []Beam{}
 
 	// vertical beams
-	for x := 0; x < grid.Width; x++ {
+	for x := uint8(0); x < grid.Width; x++ {
 		entryPoints = append(entryPoints, Beam{x, 0, Down})
 		entryPoints = append(entryPoints, Beam{x, grid.Height - 1, Up})
 	}
 	// horizontal beams
-	for y := 0; y < grid.Height; y++ {
+	for y := uint8(0); y < grid.Height; y++ {
 		entryPoints = append(entryPoints, Beam{0, y, Right})
 		entryPoints = append(entryPoints, Beam{grid.Width - 1, y, Left})
 	}
 
+	// Create a channel to parallelize
+	energyChan := make(chan int)
+
 	for _, beam := range entryPoints {
-		energy := grid.simulateBeam(beam)
+		go func(beam Beam) {
+			energy := grid.simulateBeam(beam)
+			energyChan <- energy
+		}(beam)
+	}
+
+	for range entryPoints {
+		energy := <-energyChan
 		if energy > maxEnergy {
 			maxEnergy = energy
 		}
@@ -82,7 +92,7 @@ const (
 	horizontalSplitter = '-'
 )
 
-type Direction int
+type Direction uint8
 
 const (
 	Up Direction = iota
@@ -92,12 +102,8 @@ const (
 )
 
 type Beam struct {
-	X, Y int
+	X, Y uint8
 	Direction
-}
-
-func (beam *Beam) coords() [2]int {
-	return [2]int{beam.X, beam.Y}
 }
 
 func (beam *Beam) move() {
@@ -114,40 +120,63 @@ func (beam *Beam) move() {
 }
 
 type Grid struct {
-	Width, Height int
+	Width, Height uint8
 	Cells         [][]rune
 }
 
-func (g *Grid) isInside(x, y int) bool {
-	return x >= 0 && x < g.Width && y >= 0 && y < g.Height
+func parseInput(input string) *Grid {
+	lines := strings.Split(input, "\n")
+	grid := &Grid{
+		Height: uint8(len(lines)),
+		Width:  uint8(len(lines[0])),
+	}
+	grid.Cells = make([][]rune, grid.Height)
+
+	for i, line := range lines {
+		grid.Cells[i] = []rune(line)
+	}
+	return grid
 }
 
-func (g *Grid) simulateBeam(b Beam) int {
+func (g *Grid) isInside(x, y uint8) bool {
+	return x < g.Width && y < g.Height
+}
+
+func (grid *Grid) simulateBeam(b Beam) int {
 	beam := &b
-	energizedTiles := make(map[[2]int]bool)
-	visitedSplitters := make(map[[2]int]bool)
+	energizedTiles := 0
+
+	visited := make([][][4]bool, grid.Height)
+	for i := range visited {
+		visited[i] = make([][4]bool, grid.Width)
+	}
 
 	queue := arrayqueue.New()
 	queue.Enqueue(beam)
 
-loop:
 	for !queue.Empty() {
 		elem, _ := queue.Dequeue()
 		beam = elem.(*Beam)
-		tile := g.Cells[beam.Y][beam.X]
 
-		for tile == emptySpace {
-			energizedTiles[beam.coords()] = true
-			beam.move()
-			if !g.isInside(beam.X, beam.Y) {
-				continue loop
-			}
-			tile = g.Cells[beam.Y][beam.X]
+		if !grid.isInside(beam.X, beam.Y) {
+			continue
 		}
 
-		coords := beam.coords()
+		visitedPos := visited[beam.Y][beam.X]
+		if visitedPos[beam.Direction] {
+			continue
+		}
+		visited[beam.Y][beam.X][beam.Direction] = true
 
-		switch tile {
+		energizedTiles++
+		for _, b := range visitedPos {
+			if b {
+				energizedTiles--
+				break
+			}
+		}
+
+		switch grid.Cells[beam.Y][beam.X] {
 		case backMirror:
 			switch beam.Direction {
 			case Up:
@@ -171,53 +200,22 @@ loop:
 				beam.Direction = Up
 			}
 		case verticalSplitter:
-			// Split the beam
 			if beam.Direction == Right || beam.Direction == Left {
-				if visitedSplitters[coords] {
-					continue loop
-				}
-				visitedSplitters[coords] = true
 				beam.Direction = Down
 				newBeam := &Beam{beam.X, beam.Y - 1, Up}
-				if g.isInside(newBeam.X, newBeam.Y) {
-					queue.Enqueue(newBeam)
-				}
+				queue.Enqueue(newBeam)
 			}
 		case horizontalSplitter:
-			// Split the beam
 			if beam.Direction == Up || beam.Direction == Down {
-				if visitedSplitters[coords] {
-					continue loop
-				}
-				visitedSplitters[coords] = true
 				newBeam := &Beam{beam.X - 1, beam.Y, Left}
 				beam.Direction = Right
-				if g.isInside(newBeam.X, newBeam.Y) {
-					queue.Enqueue(newBeam)
-				}
+				queue.Enqueue(newBeam)
 			}
 		}
 
-		energizedTiles[coords] = true
 		beam.move()
-		if g.isInside(beam.X, beam.Y) {
-			queue.Enqueue(beam)
-		}
+		queue.Enqueue(beam)
 	}
 
-	return len(energizedTiles)
-}
-
-func parseInput(input string) *Grid {
-	lines := strings.Split(input, "\n")
-	grid := &Grid{
-		Height: len(lines),
-		Width:  len(lines[0]),
-	}
-	grid.Cells = make([][]rune, grid.Height)
-
-	for i, line := range lines {
-		grid.Cells[i] = []rune(line)
-	}
-	return grid
+	return energizedTiles
 }
