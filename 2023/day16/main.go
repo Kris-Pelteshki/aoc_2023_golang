@@ -44,13 +44,13 @@ func main() {
 
 func part1(input string) int {
 	grid := parseInput(input)
-	total := grid.simulateBeam(Beam{0, 0, Right})
-	return total
+	visitedPointsCount := grid.simulateBeam(Beam{0, 0, Right})
+	return visitedPointsCount
 }
 
 func part2(input string) int {
 	grid := parseInput(input)
-	maxEnergy := 0
+	maxVisitedTiles := 0
 	entryPoints := []Beam{}
 
 	// vertical beams
@@ -65,23 +65,23 @@ func part2(input string) int {
 	}
 
 	// Create a channel to parallelize
-	energyChan := make(chan int)
+	beamChannel := make(chan int)
 
 	for _, beam := range entryPoints {
 		go func(beam Beam) {
-			energy := grid.simulateBeam(beam)
-			energyChan <- energy
+			visitedTiles := grid.simulateBeam(beam)
+			beamChannel <- visitedTiles
 		}(beam)
 	}
 
 	for range entryPoints {
-		energy := <-energyChan
-		if energy > maxEnergy {
-			maxEnergy = energy
+		visitedTiles := <-beamChannel
+		if visitedTiles > maxVisitedTiles {
+			maxVisitedTiles = visitedTiles
 		}
 	}
 
-	return maxEnergy
+	return maxVisitedTiles
 }
 
 const (
