@@ -209,17 +209,15 @@ loop:
 }
 
 func parseInput(input string) *Grid {
-	grid := &Grid{}
 	lines := strings.Split(input, "\n")
-	grid.Height = len(lines)
-	grid.Width = len(lines[0])
+	grid := &Grid{
+		Height: len(lines),
+		Width:  len(lines[0]),
+	}
 	grid.Cells = make([][]rune, grid.Height)
 
 	for i, line := range lines {
-		grid.Cells[i] = make([]rune, grid.Width)
-		for j, r := range line {
-			grid.Cells[i][j] = r
-		}
+		grid.Cells[i] = []rune(line)
 	}
 	return grid
 }

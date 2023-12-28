@@ -12,19 +12,11 @@ import (
 	"github.com/Kris-Pelteshki/aoc_2023/util/maths"
 )
 
-type Point struct {
-	X, Y int
-}
-type Id = int
+var galaxySymbol = '#'
 
 type Galaxy struct {
-	Point
-	ID Id
+	X, Y int
 }
-
-type Universe map[Id]*Galaxy
-
-type GalaxyPairs map[Id][]*Galaxy
 
 func (g *Galaxy) distanceTo(other *Galaxy) (dx, dy int) {
 	dx = maths.Abs(other.X - g.X)
@@ -73,24 +65,10 @@ func part2(input string) int {
 
 func calcTotalDistancesOfPairs(input string, expandEmptySpaceByFactorOf int) (total int) {
 	universe := getUniverse(input, expandEmptySpaceByFactorOf)
-	galaxyPairs := make(GalaxyPairs)
-	visited := make(map[Id]bool)
 
-	// adjacency list
-	for _, galaxy := range universe {
-		galaxyPairs[galaxy.ID] = make([]*Galaxy, 0)
-		visited[galaxy.ID] = true
-		for _, otherGalaxy := range universe {
-			if !visited[otherGalaxy.ID] {
-				galaxyPairs[galaxy.ID] = append(galaxyPairs[galaxy.ID], otherGalaxy)
-			}
-		}
-	}
-
-	for id, galaxyList := range galaxyPairs {
-		node := universe[id]
-		for _, otherGalaxy := range galaxyList {
-			dx, dy := node.distanceTo(otherGalaxy)
+	for i, galaxy := range universe {
+		for _, otherGalaxy := range universe[i+1:] {
+			dx, dy := galaxy.distanceTo(otherGalaxy)
 			total += dx + dy
 		}
 	}
@@ -114,14 +92,16 @@ func buildGrid(input string, expandEmptySpaceByFactorOf int) (*[]string, []int, 
 	}
 
 	for x := range grid[0] {
-		col := ""
+		containsGalaxy := false
 		for y := range grid {
-			col += string(grid[y][x])
+			if grid[y][x] == '#' {
+				containsGalaxy = true
+				break
+			}
 		}
 
 		colIndexToCoords[x] = emptyColCount*(expandEmptySpaceByFactorOf-1) + x
-
-		if !strings.Contains(col, "#") {
+		if !containsGalaxy {
 			emptyColCount++
 		}
 	}
@@ -131,16 +111,13 @@ func buildGrid(input string, expandEmptySpaceByFactorOf int) (*[]string, []int, 
 }
 
 // parses the input into galaxies
-func getUniverse(input string, expandEmptySpaceByFactorOf int) Universe {
-	galaxies := make(Universe)
+func getUniverse(input string, expandEmptySpaceByFactorOf int) (galaxies []*Galaxy) {
 	grid, rowIndexToCoords, colIndexToCoords := buildGrid(input, expandEmptySpaceByFactorOf)
-	id := 0
 
 	for y, line := range *grid {
 		for x, char := range line {
-			if char == '#' {
-				galaxies[id] = &Galaxy{Point{colIndexToCoords[x], rowIndexToCoords[y]}, id}
-				id++
+			if char == galaxySymbol {
+				galaxies = append(galaxies, &Galaxy{colIndexToCoords[x], rowIndexToCoords[y]})
 			}
 		}
 	}
