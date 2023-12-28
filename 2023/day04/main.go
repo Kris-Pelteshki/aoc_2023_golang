@@ -96,8 +96,8 @@ func part2(input string) (total int) {
 		}
 
 		winnersLen := len(c.getWinningNumbers())
-		for i := 1; i <= winnersLen; i++ {
-			next := c.id + i
+		for i := 0; i < winnersLen; i++ {
+			next := c.id + i + 1
 			cardCountMap[next] += count
 		}
 
@@ -108,7 +108,7 @@ func part2(input string) (total int) {
 }
 
 func parseInput(input string) (cards []*Card) {
-	for _, line := range strings.Split(input, "\n") {
+	for _, line := range util.SplitLines(input) {
 		c := Card{}
 		first, second, _ := strings.Cut(line, ":")
 		fmt.Sscanf(first, "Card %d", &c.id)
